@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.customer.ecommerce.dao.AnalyticsMapper">
+
+    <resultMap id="CategorySalesResult" type="com.customer.ecommerce.model.dto.CategorySalesDTO">
+        <result property="categoryName" column="category_name"/>
+        <result property="totalQuantity" column="total_quantity"/>
+        <result property="totalSales" column="total_sales"/>
+    </resultMap>
+
+    <resultMap id="ProductRankResult" type="com.customer.ecommerce.model.dto.ProductRankDTO">
+        <result property="productId" column="product_id"/>
+        <result property="productName" column="product_name"/>
+        <result property="totalQuantity" column="total_quantity"/>
+        <result property="totalSales" column="total_sales"/>
+    </resultMap>
+
+    <select id="getSalesByCategory" resultMap="CategorySalesResult">
+        SELECT
+            pc.name AS category_name,
+            SUM(oi.quantity) AS total_quantity,
+            SUM(oi.quantity * oi.price) AS total_sales
+        FROM order_items oi
+                 JOIN product_variants pv ON oi.variant_id = pv.id
+                 JOIN products p ON pv.product_id = p.id
+                 JOIN product_categories pc ON p.category_id = pc.id
+        GROUP BY pc.name
+        ORDER BY total_sales DESC;
+    </select>
+
+    <select id="getProductRanking" resultMap="ProductRankResult">
+        SELECT
+        p.id AS product_id,
+        p.name AS product_name,
+        SUM(oi.quantity) AS total_quantity,
+        SUM(oi.quantity * oi.price) AS total_sales
+        FROM order_items oi
+        JOIN product_variants pv ON oi.variant_id = pv.id
+        JOIN products p ON pv.product_id = p.id
+        GROUP BY p.id, p.name
+        <if test="type == 'sales'">
+            ORDER BY total_sales DESC
+        </if>
+        <if test="type == 'quantity'">
+            ORDER BY total_quantity DESC
+        </if>
+    </select>
+
+</mapper>

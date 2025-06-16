@@ -1,11 +1,25 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.customer.ecommerce.dao.CouponMapper">
+
+    <select id="findByCode" resultType="com.customer.ecommerce.model.Coupon">
+        SELECT * FROM coupons WHERE code = #{code}
+    </select>
+
     <select id="findCustomerCoupon" resultType="com.customer.ecommerce.model.CustomerCoupon">
         SELECT cc.* FROM customer_coupons cc
                              JOIN coupons c ON cc.coupon_id = c.id
         WHERE cc.customer_id = #{customerId} AND c.code = #{couponCode}
     </select>
+
+    <select id="findAvailableCouponsByCustomerId" resultType="com.customer.ecommerce.model.Coupon">
+        SELECT c.* FROM coupons c
+                            JOIN customer_coupons cc ON c.id = cc.coupon_id
+        WHERE cc.customer_id = #{customerId}
+          AND cc.is_used = FALSE
+          AND (c.valid_to IS NULL OR c.valid_to >= NOW())
+    </select>
+
     <update id="useCustomerCoupon">
         UPDATE customer_coupons SET is_used = #{isUsed} WHERE id = #{id}
     </update>

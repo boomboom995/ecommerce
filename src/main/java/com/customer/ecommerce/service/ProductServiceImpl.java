@@ -1,7 +1,6 @@
 package com.customer.ecommerce.service;
 import com.customer.ecommerce.dao.ProductMapper;
 import com.customer.ecommerce.model.Product;
-import com.customer.ecommerce.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -11,10 +10,11 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
     private final ProductMapper productMapper;
 
+    // 更新实现，把参数传给Mapper
     @Override
-    public List<Product> getAllProducts() {
-        System.out.println("c");
-        return productMapper.findAll();
+    public List<Product> getAllProducts(String name, Long categoryId) {
+        // 不再需要这行 System.out.println("c");
+        return productMapper.findAll(name, categoryId);
     }
 
     @Override

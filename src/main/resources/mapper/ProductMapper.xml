@@ -6,28 +6,52 @@
         <id property="id" column="p_id"/>
         <result property="name" column="p_name"/>
         <result property="description" column="p_description"/>
+        <result property="viewCount" column="p_view_count"/>
+        <result property="categoryId" column="p_category_id"/>
+
         <association property="category" javaType="com.customer.ecommerce.model.ProductCategory">
             <id property="id" column="c_id"/>
             <result property="name" column="c_name"/>
         </association>
+
         <collection property="images" ofType="com.customer.ecommerce.model.ProductImage">
             <id property="id" column="pi_id"/>
+            <result property="productId" column="pi_product_id"/>
             <result property="imageUrl" column="pi_image_url"/>
         </collection>
+
         <collection property="variants" ofType="com.customer.ecommerce.model.ProductVariant">
             <id property="id" column="pv_id"/>
+            <result property="productId" column="pv_product_id"/>
             <result property="attributes" column="pv_attributes"/>
             <result property="price" column="pv_price"/>
             <result property="stock" column="pv_stock"/>
+            <result property="purchaseCount" column="pv_purchase_count"/>
         </collection>
     </resultMap>
 
     <select id="findById" resultMap="ProductDetailResultMap">
         SELECT
-            p.id as p_id, p.name as p_name, p.description as p_description,
-            c.id as c_id, c.name as c_name,
-            pi.id as pi_id, pi.image_url as pi_image_url,
-            pv.id as pv_id, pv.attributes as pv_attributes, pv.price as pv_price, pv.stock as pv_stock
+            p.id as p_id,
+            p.name as p_name,
+            p.description as p_description,
+            p.view_count as p_view_count,
+            p.category_id as p_category_id,
+
+            c.id as c_id,
+            c.name as c_name,
+
+            pi.id as pi_id,
+            pi.product_id as pi_product_id,
+            pi.image_url as pi_image_url,
+
+            pv.id as pv_id,
+            pv.product_id as pv_product_id,
+            pv.attributes as pv_attributes,
+            pv.price as pv_price,
+            pv.stock as pv_stock,
+            pv.purchase_count as pv_purchase_count
+
         FROM products p
                  LEFT JOIN product_categories c ON p.category_id = c.id
                  LEFT JOIN product_images pi ON p.id = pi.product_id
@@ -36,6 +60,20 @@
     </select>
 
     <select id="findAll" resultType="com.customer.ecommerce.model.Product">
-        SELECT id, name, description FROM products where 1
+        SELECT
+        id,
+        name,
+        description,
+        category_id,
+        view_count
+        FROM products
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="categoryId != null">
+                AND category_id = #{categoryId}
+            </if>
+        </where>
     </select>
 </mapper>

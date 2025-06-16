@@ -7,7 +7,9 @@ import com.customer.ecommerce.model.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -19,30 +21,29 @@ public class OrderServiceImpl implements OrderService {
     private final OrderMapper orderMapper;
     private final CustomerMapper customerMapper;
     private final ProductVariantMapper variantMapper;
-    private final CouponMapper couponMapper;
-    // 建议：注入CouponMapper以获取优惠券详情
-    // private final CouponMapper couponMapper;
+    private final CouponMapper couponMapper; // 用于获取优惠券详情
 
+    @Override
+    public Order getOrderById(Long id) {
+        return orderMapper.findById(id);
+    }
 
     @Override
     @Transactional
-    public Order createOrder(Order orderRequest) { // 直接接收 Model
+    public Order createOrder(Order orderRequest) {
         Customer customer = customerMapper.findById(orderRequest.getCustomerId());
         if (customer == null) {
             throw new ResourceNotFoundException("Customer not found with id: " + orderRequest.getCustomerId());
         }
 
-        // 准备一个新的 Order 对象用于持久化
         Order newOrder = new Order();
         newOrder.setCustomerId(customer.getId());
         newOrder.setOrderDate(LocalDateTime.now());
-        newOrder.setStatus("PENDING");
+        newOrder.setStatus("PENDING_PAYMENT"); // 状态更新为待支付
 
         BigDecimal originalAmount = BigDecimal.ZERO;
-
-        // 从请求的 order 对象中获取 items
         List<OrderItem> requestedItems = orderRequest.getItems();
-        if(requestedItems == null || requestedItems.isEmpty()){
+        if (requestedItems == null || requestedItems.isEmpty()) {
             throw new IllegalArgumentException("Order items cannot be empty.");
         }
 
@@ -55,9 +56,7 @@ public class OrderServiceImpl implements OrderService {
                 throw new IllegalStateException("Stock not enough for product variant: " + variant.getId());
             }
 
-            // 【修复】为订单项设置购买时的单价
             itemDto.setPrice(variant.getPrice());
-
             originalAmount = originalAmount.add(variant.getPrice().multiply(BigDecimal.valueOf(itemDto.getQuantity())));
             variant.setStock(variant.getStock() - itemDto.getQuantity());
             variantMapper.updateStock(variant);
@@ -71,38 +70,43 @@ public class OrderServiceImpl implements OrderService {
             applyCoupon(newOrder, orderRequest.getCouponCode());
         }
 
-        // 插入订单并获取ID
         orderMapper.insertOrder(newOrder);
 
-        // 关联订单项并批量插入
         for (OrderItem item : requestedItems) {
             item.setOrderId(newOrder.getId());
         }
         orderMapper.insertOrderItems(requestedItems);
-
         newOrder.setItems(requestedItems);
         return newOrder;
     }
 
     private void applyCoupon(Order order, String couponCode) {
+        // 1. 检查用户是否拥有此优惠券且该券是否可用
         CustomerCoupon customerCoupon = couponMapper.findCustomerCoupon(order.getCustomerId(), couponCode);
-
-        // 检查优惠券是否有效
         if (customerCoupon == null || customerCoupon.getIsUsed()) {
-            throw new IllegalStateException("Coupon not valid or already used.");
+            throw new IllegalStateException("Coupon is not valid, not found, or already used.");
         }
 
-        //  【优化建议】
-        //  当前实现是固定的10元折扣。
-        //  一个更完整的实现应该像下面这样:
-        //  1. 根据 customerCoupon.getCouponId() 从数据库查出 Coupon 的详细信息（类型、面值、使用门槛等）。
-        //  2. 检查订单金额是否满足 `minSpend`。
-        //  3. 根据 `discountType` (FIXED 或 PERCENTAGE) 计算实际的折扣金额。
+        // 2. 获取优惠券的详细规则
+        Coupon coupon = couponMapper.findByCode(couponCode);
+        if (coupon == null || (coupon.getValidTo() != null && coupon.getValidTo().isBefore(LocalDateTime.now()))) {
+            throw new IllegalStateException("Coupon does not exist or has expired.");
+        }
 
-        // 假设优惠券为固定减10元
-        BigDecimal discountAmount = new BigDecimal("10.00");
+        // 3. 检查是否满足最低消费门槛
+        if (order.getOriginalAmount().compareTo(coupon.getMinSpend()) < 0) {
+            throw new IllegalStateException("Order amount does not meet the minimum spend of the coupon: " + coupon.getMinSpend());
+        }
+
+        // 4. 根据优惠券类型计算折扣金额
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        if (DiscountType.FIXED.name().equalsIgnoreCase(coupon.getDiscountType())) {
+            discountAmount = coupon.getDiscountValue();
+        } else if (DiscountType.PERCENTAGE.name().equalsIgnoreCase(coupon.getDiscountType())) {
+            discountAmount = order.getOriginalAmount().multiply(coupon.getDiscountValue()).setScale(2, RoundingMode.HALF_UP);
+        }
+
         BigDecimal finalAmount = order.getOriginalAmount().subtract(discountAmount);
-
         // 确保优惠后金额不小于0
         if (finalAmount.compareTo(BigDecimal.ZERO) < 0) {
             finalAmount = BigDecimal.ZERO;
@@ -113,7 +117,7 @@ public class OrderServiceImpl implements OrderService {
         order.setTotalAmount(finalAmount);
         order.setCouponCode(couponCode);
 
-        // 更新优惠券为已使用状态
+        // 5. 更新优惠券为已使用状态
         customerCoupon.setIsUsed(true);
         couponMapper.useCustomerCoupon(customerCoupon);
     }

@@ -9,5 +9,6 @@ import java.util.List;
 public interface OrderMapper {
     int insertOrder(Order order);
     int insertOrderItems(@Param("items") List<OrderItem> items);
+    // 更新此方法签名
     Order findById(@Param("id") Long id);
 }

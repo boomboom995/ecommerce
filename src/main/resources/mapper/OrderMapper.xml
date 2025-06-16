@@ -1,10 +1,35 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.customer.ecommerce.dao.OrderMapper">
+
+    <resultMap id="OrderDetailResultMap" type="com.customer.ecommerce.model.Order">
+        <id property="id" column="order_id"/>
+        <result property="originalAmount" column="original_amount"/>
+        <result property="discountAmount" column="discount_amount"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="couponCode" column="coupon_code"/>
+        <result property="status" column="status"/>
+        <result property="orderDate" column="order_date"/>
+        <association property="customer" javaType="com.customer.ecommerce.model.Customer">
+            <id property="id" column="customer_id"/>
+            <result property="name" column="customer_name"/>
+            <result property="email" column="customer_email"/>
+            <result property="phone" column="customer_phone"/>
+        </association>
+        <collection property="items" ofType="com.customer.ecommerce.model.OrderItem">
+            <id property="id" column="item_id"/>
+            <result property="variantId" column="variant_id"/>
+            <result property="quantity" column="quantity"/>
+            <result property="price" column="price"/>
+            <result property="isReturned" column="is_returned"/>
+        </collection>
+    </resultMap>
+
     <insert id="insertOrder" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO orders (customer_id, original_amount, discount_amount, total_amount, coupon_code, status, order_date)
         VALUES (#{customerId}, #{originalAmount}, #{discountAmount}, #{totalAmount}, #{couponCode}, #{status}, #{orderDate})
     </insert>
+
     <insert id="insertOrderItems">
         INSERT INTO order_items (order_id, variant_id, quantity, price, is_returned)
         VALUES
@@ -12,4 +37,16 @@
             (#{item.orderId}, #{item.variantId}, #{item.quantity}, #{item.price}, false)
         </foreach>
     </insert>
+
+    <select id="findById" resultMap="OrderDetailResultMap">
+        SELECT
+            o.id as order_id, o.original_amount, o.discount_amount, o.total_amount, o.coupon_code, o.status, o.order_date,
+            c.id as customer_id, c.name as customer_name, c.email as customer_email, c.phone as customer_phone,
+            oi.id as item_id, oi.variant_id, oi.quantity, oi.price, oi.is_returned
+        FROM orders o
+                 JOIN customers c ON o.customer_id = c.id
+                 LEFT JOIN order_items oi ON o.id = oi.order_id
+        WHERE o.id = #{id}
+    </select>
+
 </mapper>

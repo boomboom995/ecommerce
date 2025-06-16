@@ -1,4 +1,5 @@
 package com.customer.ecommerce.controller;
+
 import com.customer.ecommerce.common.R;
 import com.customer.ecommerce.common.exception.ResourceNotFoundException;
 import com.customer.ecommerce.model.Product;
@@ -14,12 +15,15 @@ public class ProductController {
 
     private final ProductService productService;
 
+    // 更新此方法以接收URL中的查询参数
     @GetMapping
-    public R<List<Product>> getAllProducts() {
-        // 在Service层可以根据 name 和 categoryId 实现筛选逻辑
-        var a = productService.getAllProducts();
-        System.out.println(a);
-        return R.success(a);
+    public R<List<Product>> getAllProducts(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Long categoryId) {
+
+        // 将接收到的参数传递给 service 层
+        List<Product> products = productService.getAllProducts(name, categoryId);
+        return R.success(products);
     }
 
     @GetMapping("/{id}")
