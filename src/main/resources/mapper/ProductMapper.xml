@@ -36,6 +36,6 @@
     </select>
 
     <select id="findAll" resultType="com.customer.ecommerce.model.Product">
-        SELECT id, name, description FROM products
+        SELECT id, name, description FROM products where 1
     </select>
 </mapper>

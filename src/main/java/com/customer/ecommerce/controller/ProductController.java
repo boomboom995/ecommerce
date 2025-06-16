@@ -16,7 +16,10 @@ public class ProductController {
 
     @GetMapping
     public R<List<Product>> getAllProducts() {
-        return R.success(productService.getAllProducts());
+        // 在Service层可以根据 name 和 categoryId 实现筛选逻辑
+        var a = productService.getAllProducts();
+        System.out.println(a);
+        return R.success(a);
     }
 
     @GetMapping("/{id}")

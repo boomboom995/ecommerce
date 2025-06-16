@@ -9,11 +9,11 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
-
     private final ProductMapper productMapper;
 
     @Override
     public List<Product> getAllProducts() {
+        System.out.println("c");
         return productMapper.findAll();
     }
 
