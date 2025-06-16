@@ -4,4 +4,14 @@
     <select id="findById" resultType="com.customer.ecommerce.model.Customer">
         SELECT * FROM customers WHERE id = #{id}
     </select>
+    <select id="findAll" resultType="com.customer.ecommerce.model.Customer">
+        SELECT * FROM customers
+    </select>
+    <select id="findByPhone" resultType="com.customer.ecommerce.model.Customer">
+        SELECT * FROM customers WHERE phone = #{phone}
+    </select>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO customers(name, email, phone, address, age, return_rate)
+        VALUES(#{name}, #{email}, #{phone}, #{address}, #{age}, 0.0)
+    </insert>
 </mapper>

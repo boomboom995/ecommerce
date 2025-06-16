@@ -1,7 +1,7 @@
 package com.customer.ecommerce.service;
 
+import com.customer.ecommerce.common.exception.ResourceNotFoundException;
 import com.customer.ecommerce.dao.*;
-import com.customer.ecommerce.dto.OrderRequestDto;
 import com.customer.ecommerce.model.*;
 import com.customer.ecommerce.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -23,66 +23,67 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public Order createOrder(OrderRequestDto orderRequestDto) {
-        Customer customer = customerMapper.findById(orderRequestDto.getCustomerId());
+    public Order createOrder(Order orderRequest) { // 直接接收 Model
+        Customer customer = customerMapper.findById(orderRequest.getCustomerId());
         if (customer == null) {
-            throw new RuntimeException("Customer not found with id: " + orderRequestDto.getCustomerId());
+            throw new ResourceNotFoundException("Customer not found with id: " + orderRequest.getCustomerId());
         }
 
-        Order order = new Order();
-        order.setCustomerId(customer.getId());
-        order.setOrderDate(LocalDateTime.now());
-        order.setStatus("PENDING");
+        // 准备一个新的 Order 对象用于持久化
+        Order newOrder = new Order();
+        newOrder.setCustomerId(customer.getId());
+        newOrder.setOrderDate(LocalDateTime.now());
+        newOrder.setStatus("PENDING");
 
-        List<OrderItem> orderItems = new ArrayList<>();
         BigDecimal originalAmount = BigDecimal.ZERO;
 
-        for (var itemDto : orderRequestDto.getItems()) {
+        // 从请求的 order 对象中获取 items
+        List<OrderItem> requestedItems = orderRequest.getItems();
+        if(requestedItems == null || requestedItems.isEmpty()){
+            throw new IllegalArgumentException("Order items cannot be empty.");
+        }
+
+        for (OrderItem itemDto : requestedItems) {
             ProductVariant variant = variantMapper.findById(itemDto.getVariantId());
             if (variant == null) {
-                throw new RuntimeException("Product variant not found: " + itemDto.getVariantId());
+                throw new ResourceNotFoundException("Product variant not found: " + itemDto.getVariantId());
             }
             if (variant.getStock() < itemDto.getQuantity()) {
-                throw new RuntimeException("Stock not enough for product variant: " + variant.getId());
+                throw new IllegalStateException("Stock not enough for product variant: " + variant.getId());
             }
 
             originalAmount = originalAmount.add(variant.getPrice().multiply(BigDecimal.valueOf(itemDto.getQuantity())));
-
-            OrderItem item = new OrderItem();
-            item.setVariantId(variant.getId());
-            item.setQuantity(itemDto.getQuantity());
-            item.setPrice(variant.getPrice());
-            orderItems.add(item);
-
             variant.setStock(variant.getStock() - itemDto.getQuantity());
             variantMapper.updateStock(variant);
         }
 
-        order.setOriginalAmount(originalAmount);
-        order.setTotalAmount(originalAmount);
+        newOrder.setOriginalAmount(originalAmount);
+        newOrder.setTotalAmount(originalAmount);
 
-        if (orderRequestDto.getCouponCode() != null && !orderRequestDto.getCouponCode().isEmpty()) {
-            applyCoupon(order, orderRequestDto.getCouponCode());
+        // 应用优惠券
+        if (orderRequest.getCouponCode() != null && !orderRequest.getCouponCode().isEmpty()) {
+            applyCoupon(newOrder, orderRequest.getCouponCode());
         }
 
-        orderMapper.insertOrder(order);
+        // 插入订单并获取ID
+        orderMapper.insertOrder(newOrder);
 
-        for (OrderItem item : orderItems) {
-            item.setOrderId(order.getId());
+        // 关联订单项并批量插入
+        for (OrderItem item : requestedItems) {
+            item.setOrderId(newOrder.getId());
         }
-        orderMapper.insertOrderItems(orderItems);
-
-        order.setItems(orderItems);
-        return order;
+        orderMapper.insertOrderItems(requestedItems);
+        
+        newOrder.setItems(requestedItems);
+        return newOrder;
     }
 
     private void applyCoupon(Order order, String couponCode) {
         CustomerCoupon customerCoupon = couponMapper.findCustomerCoupon(order.getCustomerId(), couponCode);
         if(customerCoupon == null || customerCoupon.getIsUsed()){
-             throw new RuntimeException("Coupon not valid or already used.");
+             throw new IllegalStateException("Coupon not valid or already used.");
         }
-        // ... (此处省略其他优惠券逻辑，如有效期、最低消费等)
-
+        
         // 假设优惠券为固定减10元
         BigDecimal discountAmount = new BigDecimal("10.00");
         order.setDiscountAmount(discountAmount);

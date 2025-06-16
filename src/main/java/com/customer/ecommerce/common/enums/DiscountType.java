@@ -1,4 +1,4 @@
-package com.customer.ecommerce.common.enmus;
+package com.customer.ecommerce.common.enums;
 
 public enum DiscountType {
     FIXED,      // 固定金额
