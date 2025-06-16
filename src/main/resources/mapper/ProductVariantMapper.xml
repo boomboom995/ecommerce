@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.customer.ecommerce.dao.ProductVariantMapper">
+    <select id="findById" resultType="com.customer.ecommerce.model.ProductVariant">
+        SELECT * FROM product_variants WHERE id = #{id}
+    </select>
+    <update id="updateStock">
+        UPDATE product_variants SET stock = #{stock} WHERE id = #{id}
+    </update>
+</mapper>
