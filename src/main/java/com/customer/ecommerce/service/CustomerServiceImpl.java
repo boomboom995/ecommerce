@@ -15,7 +15,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public List<Customer> getAllCustomers(String phone) {
         if (phone != null && !phone.trim().isEmpty()) {
-            return customerMapper.findByPhone(phone);
+            return (List<Customer>) customerMapper.findByPhone(phone);
         }
         return customerMapper.findAll();
     }
