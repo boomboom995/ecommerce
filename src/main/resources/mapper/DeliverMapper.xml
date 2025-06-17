@@ -12,4 +12,21 @@
     <select id="findByOrderItemId" resultType="com.customer.ecommerce.model.Delivery">
         SELECT * FROM deliveries WHERE order_item_id = #{orderItemId}
     </select>
+    <select id="findById" resultType="com.customer.ecommerce.model.Delivery">
+        SELECT * FROM deliveries WHERE id = #{id}
+    </select>
+
+    <update id="update">
+        UPDATE deliveries
+        <set>
+            <if test="carrier != null">carrier = #{carrier},</if>
+            <if test="trackingNumber != null">tracking_number = #{trackingNumber},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM deliveries WHERE id = #{id}
+    </delete>
 </mapper>
