@@ -85,7 +85,7 @@ CREATE TABLE customer_coupons (
 CREATE TABLE orders (
                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
                         customer_id BIGINT,
-                        shipping_address TEXT NOT NULL, -- 新增：订单的独立收货地址
+                        shipping_address TEXT NOT NULL,
                         original_amount DECIMAL(10, 2) NOT NULL,
                         discount_amount DECIMAL(10, 2) DEFAULT 0.00,
                         total_amount DECIMAL(10, 2) NOT NULL,
@@ -93,12 +93,7 @@ CREATE TABLE orders (
                         status VARCHAR(50),
                         order_date TIMESTAMP,
                         FOREIGN KEY (customer_id) REFERENCES customers(id)
-                        shipping_name VARCHAR(255),
-                        shipping_phone VARCHAR(20),
-                        shipping_address TEXT,
-                        FOREIGN KEY (customer_id) REFERENCES customers(id)
 );
-
 -- ... (order_items, reviews, deliveries 表的CREATE语句保持不变) ...
 -- 订单项表
 CREATE TABLE order_items (

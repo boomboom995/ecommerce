@@ -22,7 +22,6 @@ public interface CouponMapper {
 
     // ▼▼▼ 新增方法 ▼▼▼
     int insertCustomerCoupon(CustomerCoupon customerCoupon);
-    @Mapper
     int insert(Coupon coupon); // 新增优惠券种类
     int deleteById(@Param("id") Long id); // 删除优惠券种类
     Coupon findById(@Param("id") Long id);
