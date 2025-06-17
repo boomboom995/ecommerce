@@ -30,25 +30,37 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
+    // 文件路径：src/main/java/com/customer/ecommerce/service/OrderServiceImpl.java
+
     public Order createOrder(Order orderRequest) {
         Customer customer = customerMapper.findById(orderRequest.getCustomerId());
         if (customer == null) {
             throw new ResourceNotFoundException("Customer not found with id: " + orderRequest.getCustomerId());
         }
 
+        // ▼▼▼ 不再需要检查 customer.getAddress() ▼▼▼
+        // if (customer.getAddress() == null || customer.getAddress().isBlank()) {
+        //     throw new IllegalStateException("Cannot create order because the customer's shipping address is missing.");
+        // }
+
         Order newOrder = new Order();
         newOrder.setCustomerId(customer.getId());
+        newOrder.setShippingAddress(orderRequest.getShippingAddress()); // 从请求中获取地址
         newOrder.setOrderDate(LocalDateTime.now());
-        newOrder.setStatus("PENDING_PAYMENT"); // 状态更新为待支付
 
         BigDecimal originalAmount = BigDecimal.ZERO;
+
         List<OrderItem> requestedItems = orderRequest.getItems();
-        if (requestedItems == null || requestedItems.isEmpty()) {
+        if(requestedItems == null || requestedItems.isEmpty()){
             throw new IllegalArgumentException("Order items cannot be empty.");
         }
 
         for (OrderItem itemDto : requestedItems) {
             ProductVariant variant = variantMapper.findById(itemDto.getVariantId());
+
+            // ▼▼▼ 把打印语句移动到这个正确的位置 ▼▼▼
+            System.out.println("正在处理 Variant ID: " + itemDto.getVariantId() + ", 从数据库获取的单价是: " + variant.getPrice());
+
             if (variant == null) {
                 throw new ResourceNotFoundException("Product variant not found: " + itemDto.getVariantId());
             }
@@ -57,15 +69,15 @@ public class OrderServiceImpl implements OrderService {
             }
 
             itemDto.setPrice(variant.getPrice());
+
             originalAmount = originalAmount.add(variant.getPrice().multiply(BigDecimal.valueOf(itemDto.getQuantity())));
             variant.setStock(variant.getStock() - itemDto.getQuantity());
             variantMapper.updateStock(variant);
         }
 
         newOrder.setOriginalAmount(originalAmount);
-        newOrder.setTotalAmount(originalAmount); // 默认总价等于原价
+        newOrder.setTotalAmount(originalAmount);
 
-        // 应用优惠券
         if (orderRequest.getCouponCode() != null && !orderRequest.getCouponCode().isEmpty()) {
             applyCoupon(newOrder, orderRequest.getCouponCode());
         }
@@ -76,6 +88,7 @@ public class OrderServiceImpl implements OrderService {
             item.setOrderId(newOrder.getId());
         }
         orderMapper.insertOrderItems(requestedItems);
+
         newOrder.setItems(requestedItems);
         return newOrder;
     }
