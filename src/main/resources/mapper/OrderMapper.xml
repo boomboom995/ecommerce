@@ -62,25 +62,6 @@
         WHERE
             o.id = #{id}
     </select>
-    <select id="findById" resultMap="OrderDetailResultMap">
-        SELECT
-            o.id as order_id, o.customer_id, o.shipping_address, o.original_amount, o.discount_amount, o.total_amount, o.coupon_code, o.status, o.order_date,
-            c.id as customer_id_for_customer_map,
-            c.name as customer_name,
-            c.email as customer_email,
-            c.phone as customer_phone,
-            c.address as customer_address,
-            oi.id as item_id,
-            oi.order_id as order_id_for_item_map,
-            oi.variant_id,
-            oi.quantity,
-            oi.price,
-            oi.is_returned
-        FROM orders o
-                 JOIN customers c ON o.customer_id = c.id
-                 LEFT JOIN order_items oi ON o.id = oi.order_id
-        WHERE o.id = #{id}
-    </select>
     <insert id="insertOrderItems">
         INSERT INTO order_items (order_id, variant_id, quantity, price, is_returned)
         VALUES
