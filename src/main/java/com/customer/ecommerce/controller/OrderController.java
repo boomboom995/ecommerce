@@ -1,4 +1,5 @@
 package com.customer.ecommerce.controller;
+
 import com.customer.ecommerce.common.R;
 import com.customer.ecommerce.common.exception.ResourceNotFoundException;
 import com.customer.ecommerce.model.Order;
@@ -7,6 +8,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map; // <--- 添加这一行导入
+
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
@@ -14,17 +17,10 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    // ▼▼▼ 更新这个方法 ▼▼▼
     @PostMapping
     public R<Order> createOrder(@Valid @RequestBody Order order) {
-        // 1. 先调用service创建订单
-        Order createdOrder = orderService.createOrder(order);
-        
-        // 2. 根据新生成的ID，从数据库重新获取最完整的订单信息
-        Order detailedOrder = orderService.getOrderById(createdOrder.getId());
-        
-        // 3. 将最完整、最准确的信息返回给用户
-        return R.success(detailedOrder);
+        Order newOrder = orderService.createOrder(order);
+        return R.success(newOrder);
     }
 
     @GetMapping("/{id}")
@@ -34,5 +30,17 @@ public class OrderController {
             throw new ResourceNotFoundException("Order not found with id: " + id);
         }
         return R.success(order);
+    }
+
+    @PutMapping("/{id}/status")
+    public R<Order> updateOrderStatus(@PathVariable Long id, @RequestBody Map<String, String> payload) {
+        String status = payload.get("status"); // 这行代码的报错也会随之消失
+        return R.success(orderService.updateOrderStatus(id, status));
+    }
+
+    @DeleteMapping("/{id}")
+    public R<String> deleteOrder(@PathVariable Long id) {
+        orderService.deleteOrder(id);
+        return R.success("订单删除成功");
     }
 }

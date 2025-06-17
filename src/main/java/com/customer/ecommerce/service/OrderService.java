@@ -3,5 +3,7 @@ import com.customer.ecommerce.model.Order;
 
 public interface OrderService {
     Order createOrder(Order order); // 创建订单
-    Order getOrderById(Long id);    // 新增：根据ID获取订单详情
+    Order getOrderById(Long id);// 新增：根据ID获取订单详情
+    Order updateOrderStatus(Long id, String status);
+    void deleteOrder(Long id);
 }

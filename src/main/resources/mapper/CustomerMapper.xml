@@ -14,4 +14,19 @@
         INSERT INTO customers(name, email, phone, address, age, return_rate)
         VALUES(#{name}, #{email}, #{phone}, #{address}, #{age}, 0.0)
     </insert>
+    <update id="update">
+        UPDATE customers
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="age != null">age = #{age},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM customers WHERE id = #{id}
+    </delete>
 </mapper>

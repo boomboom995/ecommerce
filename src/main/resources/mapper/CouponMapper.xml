@@ -23,4 +23,35 @@
     <update id="useCustomerCoupon">
         UPDATE customer_coupons SET is_used = #{isUsed} WHERE id = #{id}
     </update>
+
+
+    <insert id="insertCustomerCoupon">
+        INSERT INTO customer_coupons(customer_id, coupon_id, is_used)
+        VALUES(#{customerId}, #{couponId}, FALSE)
+    </insert>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO coupons(code, description, discount_type, discount_value, min_spend, valid_to)
+        VALUES(#{code}, #{description}, #{discountType}, #{discountValue}, #{minSpend}, #{validTo})
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM coupons WHERE id = #{id}
+    </delete>
+
+    <select id="findById" resultType="com.customer.ecommerce.model.Coupon">
+        SELECT * FROM coupons WHERE id = #{id}
+    </select>
+
+    <update id="update">
+        UPDATE coupons
+        <set>
+            <if test="code != null">code = #{code},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="discountType != null">discount_type = #{discountType},</if>
+            <if test="discountValue != null">discount_value = #{discountValue},</if>
+            <if test="minSpend != null">min_spend = #{minSpend},</if>
+            <if test="validTo != null">valid_to = #{validTo},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
 </mapper>

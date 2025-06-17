@@ -1,12 +1,13 @@
 package com.customer.ecommerce.model;
+
 import lombok.Data;
 import java.time.LocalDateTime;
+
 @Data
 public class Review {
     private Long id;
-    private Long productId;
+    private Long orderItemId; // 修改点：替换了 productId 和 orderId
     private Long customerId;
-    private Long orderId;
     private Integer logisticsRating;
     private Integer qualityRating;
     private Integer serviceRating;

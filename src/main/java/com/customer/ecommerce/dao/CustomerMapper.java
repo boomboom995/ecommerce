@@ -10,4 +10,6 @@ public interface CustomerMapper {
     List<Customer> findAll();
     Customer findByPhone(@Param("phone") String phone);
     int insert(Customer customer);
+    int update(Customer customer);
+    int deleteById(@Param("id") Long id);
 }

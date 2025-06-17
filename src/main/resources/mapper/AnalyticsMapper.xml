@@ -45,5 +45,18 @@
             ORDER BY total_quantity DESC
         </if>
     </select>
+    <select id="getReviewStatsByProductId" resultType="com.customer.ecommerce.model.dto.ReviewStatsDTO">
+        SELECT
+            pv.product_id as productId,
+            COUNT(r.id) as reviewCount,
+            AVG(r.logistics_rating) as avgLogisticsRating,
+            AVG(r.quality_rating) as avgQualityRating,
+            AVG(r.service_rating) as avgServiceRating
+        FROM reviews r
+                 JOIN order_items oi ON r.order_item_id = oi.id
+                 JOIN product_variants pv ON oi.variant_id = pv.id
+        WHERE pv.product_id = #{productId}
+        GROUP BY pv.product_id
+    </select>
 
 </mapper>

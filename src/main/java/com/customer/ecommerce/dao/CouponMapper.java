@@ -19,4 +19,12 @@ public interface CouponMapper {
 
     // 更新用户优惠券的使用状态
     int useCustomerCoupon(CustomerCoupon customerCoupon);
+
+    // ▼▼▼ 新增方法 ▼▼▼
+    int insertCustomerCoupon(CustomerCoupon customerCoupon);
+    @Mapper
+    int insert(Coupon coupon); // 新增优惠券种类
+    int deleteById(@Param("id") Long id); // 删除优惠券种类
+    Coupon findById(@Param("id") Long id);
+    int update(Coupon coupon);
 }

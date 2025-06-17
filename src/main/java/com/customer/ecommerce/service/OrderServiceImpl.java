@@ -134,4 +134,19 @@ public class OrderServiceImpl implements OrderService {
         customerCoupon.setIsUsed(true);
         couponMapper.useCustomerCoupon(customerCoupon);
     }
+    @Override
+    public Order updateOrderStatus(Long id, String status) {
+        // 实际业务中应校验状态是否允许变更
+        orderMapper.updateStatus(id, status);
+        return orderMapper.findById(id);
+    }
+
+    @Override
+    @Transactional // 保证事务性，要么全成功，要么全失败
+    public void deleteOrder(Long id) {
+        // 必须先删除子表（order_items）中的记录，再删除主表（orders）
+        orderMapper.deleteOrderItemsByOrderId(id);
+        orderMapper.deleteOrderById(id);
+        // 注意：与此订单关联的配送、评论等记录也会成为孤立数据，需要一并处理
+}
 }

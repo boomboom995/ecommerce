@@ -2,11 +2,14 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.customer.ecommerce.dao.DeliveryMapper">
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO deliveries(order_id, carrier, tracking_number, status, shipped_date, delivered_date)
-        VALUES(#{orderId}, #{carrier}, #{trackingNumber}, #{status}, #{shippedDate}, #{deliveredDate})
+        INSERT INTO deliveries(order_item_id, carrier, tracking_number, status, shipped_date, delivered_date)
+        VALUES(#{orderItemId}, #{carrier}, #{trackingNumber}, #{status}, #{shippedDate}, #{deliveredDate})
     </insert>
 
     <select id="findByOrderId" resultType="com.customer.ecommerce.model.Delivery">
-        SELECT * FROM deliveries WHERE order_id = #{orderId}
+        SELECT * FROM deliveries WHERE order_item_id = #{orderItemId}
+    </select>
+    <select id="findByOrderItemId" resultType="com.customer.ecommerce.model.Delivery">
+        SELECT * FROM deliveries WHERE order_item_id = #{orderItemId}
     </select>
 </mapper>

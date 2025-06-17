@@ -2,6 +2,7 @@ package com.customer.ecommerce.controller;
 import com.customer.ecommerce.common.R;
 import com.customer.ecommerce.model.Coupon;
 import com.customer.ecommerce.model.Customer;
+import com.customer.ecommerce.model.dto.AssignCouponRequest;
 import com.customer.ecommerce.service.CouponService;
 import com.customer.ecommerce.service.CustomerService;
 import jakarta.validation.Valid;
@@ -31,5 +32,24 @@ public class CustomerController {
     @GetMapping("/{customerId}/coupons")
     public R<List<Coupon>> getAvailableCoupons(@PathVariable Long customerId) {
         return R.success(couponService.getAvailableCouponsByCustomerId(customerId));
+    }
+    // ▼▼▼ 新增 API 端点 ▼▼▼
+    @PostMapping("/{customerId}/coupons")
+    public R<String> assignCoupon(
+            @PathVariable Long customerId,
+            @RequestBody AssignCouponRequest request) {
+
+        couponService.assignCouponToCustomer(customerId, request.getCouponId());
+        return R.success("优惠券发放成功");
+    }
+    @PutMapping("/{id}")
+    public R<Customer> updateCustomer(@PathVariable Long id, @RequestBody Customer customer) {
+        return R.success(customerService.updateCustomer(id, customer));
+    }
+
+    @DeleteMapping("/{id}")
+    public R<String> deleteCustomer(@PathVariable Long id) {
+        customerService.deleteCustomer(id);
+        return R.success("客户删除成功");
     }
 }

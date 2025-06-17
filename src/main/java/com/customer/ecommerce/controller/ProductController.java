@@ -34,4 +34,19 @@ public class ProductController {
         }
         return R.success(product);
     }
+    @PostMapping
+    public R<Product> createProduct(@RequestBody Product product) {
+        return R.success(productService.createProduct(product));
+    }
+
+    @PutMapping("/{id}")
+    public R<Product> updateProduct(@PathVariable Long id, @RequestBody Product product) {
+        return R.success(productService.updateProduct(id, product));
+    }
+
+    @DeleteMapping("/{id}")
+    public R<String> deleteProduct(@PathVariable Long id) {
+        productService.deleteProduct(id);
+        return R.success("商品删除成功");
+    }
 }

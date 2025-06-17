@@ -39,7 +39,7 @@ CREATE TABLE product_images (
 CREATE TABLE product_variants (
                                   id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                   product_id BIGINT,
-                                  attributes VARCHAR(255), -- 使用 VARCHAR 存储简单的 JSON 字符串
+                                  attributes VARCHAR(255),
                                   price DECIMAL(10, 2) NOT NULL,
                                   stock INT NOT NULL,
                                   purchase_count BIGINT DEFAULT 0,
@@ -62,7 +62,7 @@ CREATE TABLE coupons (
                          id BIGINT AUTO_INCREMENT PRIMARY KEY,
                          code VARCHAR(50) UNIQUE NOT NULL,
                          description VARCHAR(255),
-                         discount_type VARCHAR(20) NOT NULL, -- 'FIXED' 或 'PERCENTAGE'
+                         discount_type VARCHAR(20) NOT NULL,
                          discount_value DECIMAL(10, 2) NOT NULL,
                          min_spend DECIMAL(10, 2) DEFAULT 0.00,
                          valid_to TIMESTAMP
@@ -79,9 +79,13 @@ CREATE TABLE customer_coupons (
 );
 
 -- 订单表
+-- ... (其他表的CREATE语句保持不变) ...
+
+-- ▼▼▼ 修改 orders 表结构 ▼▼▼
 CREATE TABLE orders (
                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
                         customer_id BIGINT,
+                        shipping_address TEXT NOT NULL, -- 新增：订单的独立收货地址
                         original_amount DECIMAL(10, 2) NOT NULL,
                         discount_amount DECIMAL(10, 2) DEFAULT 0.00,
                         total_amount DECIMAL(10, 2) NOT NULL,
@@ -89,44 +93,48 @@ CREATE TABLE orders (
                         status VARCHAR(50),
                         order_date TIMESTAMP,
                         FOREIGN KEY (customer_id) REFERENCES customers(id)
+                        shipping_name VARCHAR(255),
+                        shipping_phone VARCHAR(20),
+                        shipping_address TEXT,
+                        FOREIGN KEY (customer_id) REFERENCES customers(id)
 );
 
+-- ... (order_items, reviews, deliveries 表的CREATE语句保持不变) ...
 -- 订单项表
 CREATE TABLE order_items (
                              id BIGINT AUTO_INCREMENT PRIMARY KEY,
                              order_id BIGINT,
                              variant_id BIGINT,
                              quantity INT NOT NULL,
-                             price DECIMAL(10, 2) NOT NULL, -- 购买时的单价
+                             price DECIMAL(10, 2) NOT NULL,
                              is_returned BOOLEAN DEFAULT FALSE,
                              FOREIGN KEY (order_id) REFERENCES orders(id),
                              FOREIGN KEY (variant_id) REFERENCES product_variants(id)
 );
 
--- 评论表
+-- ▼▼▼【V2.0 修改】评论表 ▼▼▼
+-- 修改 CREATE TABLE reviews ...
 CREATE TABLE reviews (
                          id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                         product_id BIGINT,
-                         customer_id BIGINT,
-                         order_id BIGINT,
+
+                         order_item_id BIGINT UNIQUE, -- 新增，并设为 UNIQUE 确保一个订单项只有一个评论
                          logistics_rating TINYINT,
                          quality_rating TINYINT,
                          service_rating TINYINT,
                          comment_text TEXT,
                          created_at TIMESTAMP,
-                         FOREIGN KEY (product_id) REFERENCES products(id),
-                         FOREIGN KEY (customer_id) REFERENCES customers(id),
-                         FOREIGN KEY (order_id) REFERENCES orders(id)
+                         FOREIGN KEY (order_item_id) REFERENCES order_items(id) -- 新增
 );
 
--- 配送表
+-- ▼▼▼【V2.0 修改】配送表 ▼▼▼
+-- 将 order_id 替换为 order_item_id 以支持拆单发货
 CREATE TABLE deliveries (
                             id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                            order_id BIGINT,
+                            order_item_id BIGINT, -- 修改点：关联到订单项
                             carrier VARCHAR(100),
                             tracking_number VARCHAR(100),
                             status VARCHAR(50),
                             shipped_date TIMESTAMP,
                             delivered_date TIMESTAMP,
-                            FOREIGN KEY (order_id) REFERENCES orders(id)
+                            FOREIGN KEY (order_item_id) REFERENCES order_items(id) -- 修改点
 );

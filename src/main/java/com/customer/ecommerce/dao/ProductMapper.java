@@ -10,4 +10,6 @@ public interface ProductMapper {
     // 更新此方法以支持过滤
     List<Product> findAll(@Param("name") String name, @Param("categoryId") Long categoryId);
     int insert(Product product);
+    int update(Product product);
+    int deleteById(@Param("id") Long id);
 }
